@@ -1,0 +1,165 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run-azurite",
+      "type": "shell",
+      "command": "azurite --inMemoryPersistence",
+      "options": {
+        "cwd": "${workspaceFolder}/.vscode"
+      },
+      "problemMatcher": {
+        "fileLocation": "absolute",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Executing task.*$",
+          "endsPattern": "^.*successfully listening at http://127.0.0.1:10002.*$"
+        }
+      },
+      "isBackground": true
+    },
+    {
+      "label": "clean-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "revealProblems": "onProblem",
+        "close": true
+      }
+    },
+    {
+      "label": "build-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "revealProblems": "onProblem",
+        "close": true
+      }
+    },
+    {
+      "label": "run-backend",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}/bin/Debug/net8.0",
+        "env": {
+          "DDEIOptions__MockBaseUrl": "http://localhost:7085"
+        }
+      },
+      "command": "func start --no-build --verbose --password Cps.S3Spike",
+      "isBackground": true,
+      "problemMatcher": "$func-dotnet-watch"
+    },
+    
+    {
+      "label": "prepare-all",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "build-backend",
+        "run-azurite"
+      ]
+    },
+    {
+      "label": "build-and-run-all",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "prepare-all",
+        "run-backend"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "clean (functions)",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "build (functions)",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "dependsOn": "clean (functions)",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "clean release (functions)",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "--configuration",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "publish (functions)",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "--configuration",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "dependsOn": "clean release (functions)",
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "type": "func",
+      "dependsOn": "build (functions)",
+      "options": {
+        "cwd": "${workspaceFolder}/bin/Debug/net8.0"
+      },
+      "command": "host start",
+      "isBackground": true,
+      "problemMatcher": "$func-dotnet-watch"
+    }
+  ]
+}

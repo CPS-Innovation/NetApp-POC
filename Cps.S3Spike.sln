@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cps.S3Spike", "Cps.S3Spike.csproj", "{7CBC13B0-480C-D9A2-4A23-61B6374B3840}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7CBC13B0-480C-D9A2-4A23-61B6374B3840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CBC13B0-480C-D9A2-4A23-61B6374B3840}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CBC13B0-480C-D9A2-4A23-61B6374B3840}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CBC13B0-480C-D9A2-4A23-61B6374B3840}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B39A8987-2478-439B-A8D3-2E56A9414B89}
+	EndGlobalSection
+EndGlobal
