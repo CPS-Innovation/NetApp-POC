@@ -1,16 +1,19 @@
 using System.Text.Json;
 using Cps.S3Spike.Clients;
 using Cps.S3Spike.Exceptions;
+using Cps.S3Spike.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Options;
 
 namespace Cps.S3Spike.Functions;
 
-public class DeleteObject(INetAppClient netAppClient, IS3Client s3Client)
+public class DeleteObject(INetAppClient netAppClient, IS3Client s3Client, IOptions<NetAppOptions> netAppOptions)
 {
     private readonly INetAppClient _netAppClient = netAppClient;
     private readonly IS3Client _s3Client = s3Client;
+    private readonly string _username = netAppOptions.Value.DefaultUsername;
 
     [Function(nameof(DeleteObject))]
     public async Task<IActionResult> RunAsync(
@@ -21,7 +24,12 @@ public class DeleteObject(INetAppClient netAppClient, IS3Client s3Client)
 
         try
         {
-            var response = await _netAppClient.RegenerateUserKeysAsync("neil.foubister@cps.gov.uk", accessToken);
+            if (string.IsNullOrWhiteSpace(_username))
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            var response = await _netAppClient.RegenerateUserKeysAsync(_username, accessToken);
 
             if (response == null || response.Records.Count == 0)
             {

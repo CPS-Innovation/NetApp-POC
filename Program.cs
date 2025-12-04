@@ -1,7 +1,8 @@
 using Cps.S3Spike.Clients;
 using Cps.S3Spike.Extensions;
+using Cps.S3Spike.Middleware;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,8 +15,10 @@ var logger = loggerFactory.CreateLogger("Configuration");
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication(webApp =>
     {
-        // note: the order of middleware is important, as it determines the execution flow
-    }) // ✅ Adds ASP.NET Core integration
+        // Enable request body buffering to support proxy retries for large file uploads.
+        // This must run BEFORE the YARP proxy processes the request.
+        webApp.UseMiddleware<RequestBufferingMiddleware>();
+    })
     .ConfigureLogging((context, logging) =>
     {
         // Clear providers to avoid conflicts with default filtering
@@ -42,6 +45,13 @@ var host = new HostBuilder()
         services
             .AddApplicationInsightsTelemetryWorkerService()
             .ConfigureFunctionsApplicationInsights();
+        
+        // Increase Kestrel request body limit to match our upload limit (1 GB)
+        services.Configure<KestrelServerOptions>(options =>
+        {
+            //options.Limits.MaxRequestBodySize = 1073741824; // 1 GB
+            options.Limits.MaxRequestBodySize = null;
+        });
 
         //services.AddSingleton<IAuthorizationValidator, AuthorizationValidator>();
 
