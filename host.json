@@ -1,4 +1,5 @@
 {
+    "$schema": "https://aka.ms/azure-functions-hostjson-schema",
     "version": "2.0",
     "logging": {
         "applicationInsights": {
@@ -8,5 +9,16 @@
             },
             "enableLiveMetricsFilters": true
         }
-    }
+    },
+    "extensions": {
+        "http": {
+            "routePrefix": "api",
+            "maxOutstandingRequests": 200,
+            "maxConcurrentRequests": 100,
+            "dynamicThrottlesEnabled": false,
+            "requestBodyBuffering": true,
+            "maxRequestBodySize": 1073741824
+        }
+    },
+    "functionTimeout": "00:10:00"
 }

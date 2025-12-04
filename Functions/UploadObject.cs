@@ -3,13 +3,16 @@ using Cps.S3Spike.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Options;
+using Cps.S3Spike.Models;
 
 namespace Cps.S3Spike.Functions;
 
-public class UploadObject(INetAppClient netAppClient, IS3Client s3Client)
+public class UploadObject(INetAppClient netAppClient, IS3Client s3Client, IOptions<NetAppOptions> netAppOptions)
 {
     private readonly INetAppClient _netAppClient = netAppClient;
     private readonly IS3Client _s3Client = s3Client;
+    private readonly string _username = netAppOptions.Value.DefaultUsername;
 
     [Function(nameof(UploadObject))]
     public async Task<IActionResult> RunAsync(
@@ -20,7 +23,12 @@ public class UploadObject(INetAppClient netAppClient, IS3Client s3Client)
 
         try
         {
-            var response = await _netAppClient.RegenerateUserKeysAsync("neil.foubister@cps.gov.uk", accessToken);
+            if (string.IsNullOrWhiteSpace(_username))
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            var response = await _netAppClient.RegenerateUserKeysAsync(_username, accessToken);
 
             if (response == null || response.Records.Count == 0)
             {

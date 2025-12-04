@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using Amazon;
 using Amazon.Runtime;
@@ -197,9 +198,11 @@ public class S3Client : IS3Client
         return s3Client.InitiateMultipartUploadAsync(request);
     }
 
-    public Task<UploadPartResponse?> UploadPartAsync(string bucketName, string objectKey, int partNumber, string uploadId, byte[] partData, string accessKey, string secretKey)
+    public async Task<UploadPartResponse?> UploadPartAsync(string bucketName, string objectKey, int partNumber, string uploadId, byte[] partData, string accessKey, string secretKey)
     {
         var s3Client = CreateS3Client(accessKey, secretKey);
+
+        using var partStream = new MemoryStream(partData, writable: false);
 
         var request = new UploadPartRequest
         {
@@ -208,10 +211,11 @@ public class S3Client : IS3Client
             PartNumber = partNumber,
             UploadId = uploadId,
             PartSize = partData.Length,
-            InputStream = new MemoryStream(partData)
+            InputStream = partStream,
+            DisablePayloadSigning = true // avoid servers that drop SigV4 chunked uploads
         };
 
-        return s3Client.UploadPartAsync(request);
+        return await s3Client.UploadPartAsync(request);
     }
 
     public Task<CompleteMultipartUploadResponse?> CompleteMultipartUploadAsync(string bucketName, string objectKey, string uploadId, List<PartETag> partETags, string accessKey, string secretKey)
@@ -238,7 +242,8 @@ public class S3Client : IS3Client
 
         var handler = new HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
+            ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
+            SslProtocols = SslProtocols.Tls12
         };
 
         var customHttpClientFactory = new CustomHttpClientFactory(handler);
@@ -253,7 +258,8 @@ public class S3Client : IS3Client
             HttpClientFactory = customHttpClientFactory,
             RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
             ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
-            UseHttp = true
+            UseHttp = false,
+            Timeout = TimeSpan.FromMinutes(10)
         });
 
         return s3Client;
